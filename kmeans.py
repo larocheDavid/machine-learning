@@ -28,20 +28,18 @@ class Cluster:
 		self.centroidXY = newPoint
 		self.drawMarker(newPoint, marker='+')
 
-	def swapPoint(pos1, pos2, thatCluster):
-		self.clusterPoints[pos1], thatCluster.clusterPoints[pos2] = self.clusterPoints[pos2], thatCluster.clusterPoints[pos1]
+	def swapPoint(self, thatCluster, pos1, pos2):
+		self.clusterPoints[pos1], thatCluster.clusterPoints[pos2] = thatCluster.clusterPoints[pos2], self.clusterPoints[pos1]
 		
 	def computeNewCentroid(self):
 		self.clearMarker(self.centroidXY, marker='+')
 		self.centroidXY = np.mean(self.clusterPoints, axis=0)
 		self.drawMarker(self.centroidXY, marker='+')
 	
-	def computeVar(self):
-		
-		self.computeNewCentroid()
+	def computeVar(self, newPoint):
 		var = 0
 		for point in self.clusterPoints:
-			var += pointDistance(point, self.centroidXY)
+			var += pointDistance(point, newPoint)
 		return var/len(self.clusterPoints)
 
 
@@ -85,11 +83,11 @@ def findClosestPoint(cluster, dataList):
 	dataList.remove(closestPoint)
 	return closestPoint
 
-def updateCentroids(clusterList):
+def computeAllCentroid(clusterList):
 	for cluster in clusterList:
 		cluster.computeNewCentroid()
 
-def swapPoints(pointA, pointB):
+def swapPoint(pointA, pointB):
 	pointA, pointB = pointB, pointA
 		
 numberOfCluster = 2
@@ -119,26 +117,54 @@ for j in range(totalPoints//numberOfCluster):
 		closestPoint = findClosestPoint(clusterList[i], dataList)
 		clusterList[i].addPoint(closestPoint)
 
-var = totalPoints*domainLen
-
+var = 100000000000000000000000000000
+'''
 while True:
 	for i in range(len(clusterList[0].clusterPoints)):
 		for j in range(len(clusterList[1].clusterPoints)):
-			swapPoint(clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j])
+			
+			pointA = clusterList[0].clusterPoints[i]
+			pointB = clusterList[1].clusterPoints[j]
+			
+			#clusterList[0].swapPoint(clusterList[1], i, j)
+			swapPoints(clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j])
+						
+			#varNew = clusterList[0].computeVar() + clusterList[1].computeVar()
+			varNew = np.var(clusterList[0].clusterPoints) + np.var(clusterList[1].clusterPoints)
+			if varNew < var:
+				var = varNew
+				#plt.scatter(clusterList[0].clusterPoints[i][0], clusterList[0].clusterPoints[i][1], c=clusterList[0].color, marker='o')
+				clusterList[0].drawMarker(pointA, 'o')
+				clusterList[1].drawMarker(pointB, 'o')
+				computeAllCentroid(clusterList)
+				print("SWAP")
+			else:
+				swapPoints(clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j])
+				#clusterList[0].swapPoint(clusterList[1], i, j)
+	break
+'''
+while True:
+	for i in range(len(clusterList[0].clusterPoints)):
+		for j in range(len(clusterList[1].clusterPoints)):
+			pointA = clusterList[0].clusterPoints[i]
+			pointB = clusterList[1].clusterPoints[j]
+			clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j] = clusterList[1].clusterPoints[j], clusterList[0].clusterPoints[i]
 
-			varNew = clusterList[0].clusterPoints[i].computeVar + clusterList[1].clusterPoints[j].computeVar + 
+			varNew = clusterList[0].computeVar(pointB) + clusterList[1].computeVar(pointA)
 			if varNew < var:
 				var = varNew
 				plt.scatter(clusterList[0].clusterPoints[i][0], clusterList[0].clusterPoints[i][1], c=clusterList[0].color, marker='o')
 				plt.pause(1)
 				plt.scatter(clusterList[1].clusterPoints[j][0], clusterList[1].clusterPoints[j][1], c=clusterList[1].color, marker='o')
 				plt.pause(1)
-				updateCentroids(clusterList)
+				computeAllCentroid(clusterList)
 				print("SWAP")
 			else:
-				swapPoint(clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j])
+				clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j] = clusterList[1].clusterPoints[j], clusterList[0].clusterPoints[i]
+				#swapPoint(clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j])
 	
 	break
+
 
 print("Algo terminated")
 plt.show()
