@@ -36,12 +36,25 @@ class Cluster:
 		self.centroidXY = np.mean(self.clusterPoints, axis=0)
 		self.drawMarker(self.centroidXY, marker='+')
 	
-	def computeVar(self, newPoint):
-		var = 0
-		for point in self.clusterPoints:
-			var += pointDistance(point, newPoint)
-		return var/len(self.clusterPoints)
+	def computeVar(self):
+		
+		mean = np.mean(self.clusterPoints, axis=0)	
+		varx = vary = 0
 
+		for point in self.clusterPoints:
+			varx += (point[0]-mean[0])**2
+			vary += (point[1]-mean[1])**2
+		
+		return (varx+vary)/len(self.clusterPoints)
+		#return (varx+vary)/len(self.clusterPoints)
+		'''
+		var = 0
+
+		for point in self.clusterPoints:
+			var += (point-mean)**2
+		
+		return var/len(self.clusterPoints)
+		'''
 
 def putRandomPoint(matrix, value): # put a point in matrix randomly, return coordinate
 	spaceLen = len(matrix[0])
@@ -69,6 +82,8 @@ def coordinatesList(matrix): # return list of point's coordinates
 				dataList.append((i,j))
 	return dataList
 
+#def diff1d(x1, x2):
+#	return x2-x1
 
 def pointDistance(A, B): # return distance between A B
 	return math.sqrt((A[0]-B[0])*(A[0]-B[0]) + (A[1]-B[1])*(A[1]-B[1]))
@@ -126,8 +141,10 @@ while True:
 			pointB = clusterList[1].clusterPoints[j]
 			
 			clusterList[0].swapPoint(i, j, clusterList[1])
-			#varNew = clusterList[0].computeVar(pointB) + clusterList[1].computeVar(pointA)
-			varNew = np.var(clusterList[0].clusterPoints) + np.var(clusterList[1].clusterPoints)
+			print("npVar", np.var(clusterList[0].clusterPoints))
+			print("myVar", clusterList[0].computeVar())
+			varNew = clusterList[0].computeVar() + clusterList[1].computeVar()
+			#varNew = np.var(clusterList[0].clusterPoints) + np.var(clusterList[1].clusterPoints)
 			if varNew < var:
 				var = varNew
 				clusterList[0].drawMarker(pointB, 'o')
