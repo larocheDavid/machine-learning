@@ -31,10 +31,18 @@ class Cluster:
 	def swapPoint(pos1, pos2, thatCluster):
 		self.clusterPoints[pos1], thatCluster.clusterPoints[pos2] = self.clusterPoints[pos2], thatCluster.clusterPoints[pos1]
 		
-	def setNewCentroid(self):
+	def computeNewCentroid(self):
 		self.clearMarker(self.centroidXY, marker='+')
 		self.centroidXY = np.mean(self.clusterPoints, axis=0)
 		self.drawMarker(self.centroidXY, marker='+')
+	
+	def computeVar(self):
+		
+		self.computeNewCentroid()
+		var = 0
+		for point in self.clusterPoints:
+			var += pointDistance(point, self.centroidXY)
+		return var/len(self.clusterPoints)
 
 
 def putRandomPoint(matrix, value): # put a point in matrix randomly, return coordinate
@@ -79,8 +87,10 @@ def findClosestPoint(cluster, dataList):
 
 def updateCentroids(clusterList):
 	for cluster in clusterList:
-		cluster.setNewCentroid()
+		cluster.computeNewCentroid()
 
+def swapPoints(pointA, pointB):
+	pointA, pointB = pointB, pointA
 		
 numberOfCluster = 2
 totalPoints =  60
@@ -114,20 +124,19 @@ var = totalPoints*domainLen
 while True:
 	for i in range(len(clusterList[0].clusterPoints)):
 		for j in range(len(clusterList[1].clusterPoints)):
-			
-			clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j] = clusterList[1].clusterPoints[j], clusterList[0].clusterPoints[i]
-			varNew = np.var(clusterList[0].clusterPoints)+np.var(clusterList[1].clusterPoints)
-			
+			swapPoint(clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j])
+
+			varNew = clusterList[0].clusterPoints[i].computeVar + clusterList[1].clusterPoints[j].computeVar + 
 			if varNew < var:
 				var = varNew
 				plt.scatter(clusterList[0].clusterPoints[i][0], clusterList[0].clusterPoints[i][1], c=clusterList[0].color, marker='o')
 				plt.pause(1)
 				plt.scatter(clusterList[1].clusterPoints[j][0], clusterList[1].clusterPoints[j][1], c=clusterList[1].color, marker='o')
 				plt.pause(1)
-				print("SWAP")
 				updateCentroids(clusterList)
+				print("SWAP")
 			else:
-				clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j] = clusterList[1].clusterPoints[j], clusterList[0].clusterPoints[i]
+				swapPoint(clusterList[0].clusterPoints[i], clusterList[1].clusterPoints[j])
 	
 	break
 
