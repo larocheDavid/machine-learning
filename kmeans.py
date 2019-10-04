@@ -1,8 +1,7 @@
-# David Laroche 2019
+# ML - David Laroche - 2019
 
 import numpy as np
 import matplotlib.pyplot as plt
-#from matplotlib import colors
 import random
 import math
 
@@ -45,7 +44,7 @@ class Cluster:
 			varx += (point[0]-mean[0])**2
 			vary += (point[1]-mean[1])**2
 		
-		return (varx+vary)/len(self.clusterPoints)
+		return np.mean(varx+vary)/len(self.clusterPoints)
 		#return (varx+vary)/len(self.clusterPoints)
 		'''
 		var = 0
@@ -82,8 +81,6 @@ def coordinatesList(matrix): # return list of point's coordinates
 				dataList.append((i,j))
 	return dataList
 
-#def diff1d(x1, x2):
-#	return x2-x1
 
 def pointDistance(A, B): # return distance between A B
 	return math.sqrt((A[0]-B[0])*(A[0]-B[0]) + (A[1]-B[1])*(A[1]-B[1]))
@@ -104,58 +101,76 @@ def computeAllCentroid(clusterList):
 
 def swapPoint(pointA, pointB):
 	pointA, pointB = pointB, pointA
-		
-numberOfCluster = 2
+
+def meanClustersVariance(clusterList):
+	res = 0
+	for cluster in clusterList:
+		res += cluster.computeVar()
+	return res/len(clusterList)
+
+
+def swapBetweenClusters(clusterList, k): # swap all points between two clusters, save the lowest variance
+	variance = meanClustersVariance(clusterList)
+
+	for i in range(len(clusterList[k].clusterPoints)):
+		for j in range(len(clusterList[k+1].clusterPoints)):
+			
+			clusterList[k].swapPoint(i, j, clusterList[k+1])
+			#varNew = clusterList[i].computeVar() + clusterB.computeVar()
+			varNew = meanClustersVariance(clusterList)
+			#varNew = np.var(clusterA[0].clusterPoints) + np.var(clusterList[1].clusterPoints)
+			
+			if varNew < variance:
+				variance = varNew
+				#print("npVar", np.var(clusterA.clusterPoints)+np.var(clusterB.clusterPoints))
+				#print("myVar", clusterA.computeVar() + clusterB.computeVar())
+				#print("myVar", varNew)
+				
+				clusterList[k].drawMarker(clusterList[k].clusterPoints[i], 'o')
+				clusterList[k+1].drawMarker(clusterList[k+1].clusterPoints[j], 'o')
+				computeAllCentroid(clusterList)
+				#print("SWAP")
+			else:
+				clusterList[k].swapPoint(i, j, clusterList[k+1])
+
+
+numberOfCluster = 4
 totalPoints =  60
 domainLen = 60
-timePause = 0.1
-
-dataMat = np.zeros((domainLen, domainLen)) # initialise matrix
-
-initDatas(dataMat, totalPoints) # initialise data in the matrix
-
-dataList = coordinatesList(dataMat) # vector of data's coordinate
-
-for point in dataList:
-	plt.scatter(point[0], point[1], c='g')
-plt.pause(timePause)
-
+variance = 1000000
 colorList = ['b', 'r', 'c', 'm', 'y', 'k']
-clusterList = []
-for i in range(numberOfCluster):
-	centroidXY = putRandomPoint(dataMat, 2)
-	clusterList.append(Cluster(centroidXY, colorList[i])) # make list of clusters
-	clusterList[i].setCentroid(centroidXY)
 
-for j in range(totalPoints//numberOfCluster):
+if __name__ == "__main__":
+
+	dataMat = np.zeros((domainLen, domainLen)) # initialise matrix
+
+	initDatas(dataMat, totalPoints) # initialise data in the matrix
+
+	dataList = coordinatesList(dataMat) # vector of data's coordinate
+
+	for point in dataList:
+		plt.scatter(point[0], point[1], c='g')
+
+	clusterList = []
 	for i in range(numberOfCluster):
-		closestPoint = findClosestPoint(clusterList[i], dataList)
-		clusterList[i].addPoint(closestPoint)
+		centroidXY = putRandomPoint(dataMat, 2)
+		clusterList.append(Cluster(centroidXY, colorList[i])) # make list of clusters
+		clusterList[i].setCentroid(centroidXY)
 
-var = totalPoints*domainLen
+	for j in range(totalPoints//numberOfCluster):
+		for i in range(numberOfCluster):
+			closestPoint = findClosestPoint(clusterList[i], dataList)
+			clusterList[i].addPoint(closestPoint)
+	
+	newVariance = meanClustersVariance(clusterList)
+	
+	while(newVariance < variance):
+		variance = newVariance
+		for k in range(numberOfCluster-1):
+			swapBetweenClusters(clusterList, k)
+		print("POUET")
+		newVariance = meanClustersVariance(clusterList)
 
-while True:
-	for i in range(len(clusterList[0].clusterPoints)):
-		for j in range(len(clusterList[1].clusterPoints)):
-			pointA = clusterList[0].clusterPoints[i]
-			pointB = clusterList[1].clusterPoints[j]
-			
-			clusterList[0].swapPoint(i, j, clusterList[1])
-			print("npVar", np.var(clusterList[0].clusterPoints))
-			print("myVar", clusterList[0].computeVar())
-			varNew = clusterList[0].computeVar() + clusterList[1].computeVar()
-			#varNew = np.var(clusterList[0].clusterPoints) + np.var(clusterList[1].clusterPoints)
-			if varNew < var:
-				var = varNew
-				clusterList[0].drawMarker(pointB, 'o')
-				clusterList[1].drawMarker(pointA, 'o')
-				computeAllCentroid(clusterList)
-				print("SWAP")
-			else:
-				clusterList[0].swapPoint(i, j, clusterList[1])
-	break
-
-
-print("Algo terminated")
-plt.show()
+	print("Algo terminated")
+	plt.show()
 
