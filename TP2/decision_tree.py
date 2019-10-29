@@ -8,6 +8,7 @@ class Node:
 	def __init__(self, data, maxDepth):
 		self.left = None
 		self.right = None
+		self.leaf = False
 		self.data = data
 		self.maxDepth = maxDepth
 		self.doneAttribute = [False] * 6
@@ -47,6 +48,8 @@ class Node:
 
 		purClass0, impClass0, purClass1, impClass1 = results[0], results[1], results[2], results[3]
 		
+		print(purClass0, impClass0, purClass1, impClass1)
+
 		totalClass0 = purClass0 + impClass0
 		totalClass1 = purClass1 + impClass1
 		
@@ -56,43 +59,49 @@ class Node:
 		
 		giniPond = totalClass0/(totalClass0+totalClass1)*gNode1 + totalClass1/(totalClass0+totalClass1)*gNode2
 
-		#print(purClass0, purClass1)
+		
 		return (gNode1, gNode2, giniPond)
 
 
 	def findBestSection(self, attribMat):
 		
-		bestGeany = 0.5
+		bestGini = 0.5
 		best_section = 1
 		
 		lenAttribute = int(max(attribMat[:,1]))
 		
 		for sectionNumber in range(1, lenAttribute):
-			currGeany = self.computeGini(self.countClassPerSection(attribMat, sectionNumber))
-			print("gini", currGeany)
+			
+			classPerSection = self.countClassPerSection(attribMat, sectionNumber)
+			
+			if (classPerSection[0] + classPerSection[1] != 0 and classPerSection[2] + classPerSection[3] != 0):
+
+				currGini = self.computeGini(classPerSection)
+				print("curr_gini", currGini)
+				print("Currsection", sectionNumber)
+				
+				if 	currGini[2] < bestGini:
+					bestGini = currGini[2]
+					best_section = sectionNumber
 		
-			if 	currGeany[2] < bestGeany:
-				bestGeany = currGeany[2]
-				best_section = sectionNumber
-		
-		return (bestGeany, best_section)
+		return (bestGini, best_section)
 
 
 	def findBestAttribute(self):
-		bestGeany = 0.5
+		bestGini = 0.5
 		bestAttrib = 1
 
 		for attribNumber in range(1, len(self.data[0])):
 			if self.doneAttribute[attribNumber-1] == False:
 				attribmat = self.oneAttribToClassMat(attribNumber)		
 				attriBestSection = self.findBestSection(attribmat)
-
-				if attriBestSection[0]  < bestGeany:
-					bestGeany = attriBestSection[0]
+				print("currATtrib", attribNumber)
+				if attriBestSection[0]  < bestGini:
+					bestGini = attriBestSection[0]
 					bestAttrib = attribNumber
 					bestSection = attriBestSection[1]
 
-		return (bestGeany, bestAttrib, bestSection)
+		return (bestGini, bestAttrib, bestSection)
 
 
 	def splitData(self):
@@ -129,7 +138,7 @@ class Node:
 
 		self.doneAttribute[self.attribute-1] = True
 
-		print("Attribute", self.attribute, "Section", self.section, "Gini", self.gini)
+		print("Attribute", self.attribute, "Section", self.section, "Gini", self.gini, "depth", self.maxDepth)
 		
 		dataL, dataR = self.splitData()
 
@@ -137,22 +146,33 @@ class Node:
 		#print("GINI", self.computeGini((5, 1, 2, 4)))
 		#print(dataR)
 		
-				
+		if self.left is None and len(set(dataL[:,0])) == 2:
+			#print("anyL", dataL.any())
+			#print("dataL", dataL)
+			self.left = Node(dataL, self.maxDepth-1)
+			
+		if self.right is None and len(set(dataR[:,0])) == 2:
+			print("DATAR\n", dataR)
+			#print("anyR", dataR.any())
+			#print("dataR", dataR)
+			self.right = Node(dataR, self.maxDepth-1)
+		
 
 
-		if self.maxDepth > 0 and self.gini > 0.1:
+		'''
+		if self.maxDepth > 0:
 			print("depth", self.maxDepth)
-			if self.left is None and dataL.any():
-				print("anyL", dataL.any())
-				print("dataL", dataL)
+			if self.left is None and len(set(dataL[:,0])) == 2:
+				#print("anyL", dataL.any())
+				#print("dataL", dataL)
 				self.left = Node(dataL, self.maxDepth-1)
 				
-			if self.right is None and dataR.any():
-				print("anyR", dataR.any())
-				print("dataR", dataR)
+			if self.right is None and len(set(dataR[:,0])) == 2:
+				#print("anyR", dataR.any())
+				#print("dataR", dataR)
 				self.right = Node(dataR, self.maxDepth-1)
 		
-		
+		'''
 	
 def dataFileToMat(filename):
 	return np.loadtxt(filename, usecols=(0,1,2,3,4,5,6))
