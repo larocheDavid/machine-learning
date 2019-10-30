@@ -1,191 +1,182 @@
 # Machine Learning - arbre de décision - David Laroche - 2019
-
 import numpy as np
 
-
 class Node:
-
-	def __init__(self, data, maxDepth, doneAttribute):
+	def __init__(self, dataTrain, done_attribute, count):
 		self.left = None
 		self.right = None
-		self.leaf = False
-		self.data = data
-		self.maxDepth = maxDepth
-		self.doneAttribute = doneAttribute
+		self.c1 = 0
+		self.c2 = 0
+		self.testC1 = 0
+		self.testC2 = 0
+		self.gini = None
+		self.testGini = 0
+		self.dataTrain = dataTrain
+		self.dataTest = None
+		self.count = count
 		self.attribute = None
 		self.section = None
-		self.gini = None
-		self.compute()
+		self.done_attribute = done_attribute
 	
-	
-	def oneAttribToClassMat(self, attribNumber):
-		return self.data[:, [0, attribNumber]]
 
+def dataFileToMat(filename):
+	return np.loadtxt(filename, usecols=(0,1,2,3,4,5,6))
 
-	def parentGini(self):
+def countC1C2(data):
 		c1, c2 = 0, 0
 		
-		for row in self.data:
+		for row in data:
 			if row[0] == 0:
 				c1 += 1
 			else:
 				c2 += 1
-
-		return (c1, c2)
-
-
-	def countClassPerSection(self, attribMat, sectionNumber):
-		purClass0, impClass0, purClass1, impClass1 = 0, 0, 0, 0
-
-		for row in attribMat:
-			if row[1] <= sectionNumber:
-
-				if row[0] == 0:
-					purClass0 += 1
-				else:
-					impClass0 += 1
-			else:
-				if row[0] == 1:
-					purClass1 += 1
-				else:
-					impClass1 += 1
-				
-		return (purClass0, impClass0, purClass1, impClass1) 
+		return c1, c2
 
 
-	def computeGini(self, results):
-
-		purClass0, impClass0, purClass1, impClass1 = results[0], results[1], results[2], results[3]
-		#print(purClass0, impClass0, purClass1, impClass1)
-
-		totalClass0 = purClass0 + impClass0
-		totalClass1 = purClass1 + impClass1
-		
-		gNode1 = 1 - (purClass0/totalClass0)**2 - (impClass0/totalClass0)**2
-		gNode2 = 1 - (purClass1/totalClass1)**2 - (impClass1/totalClass1)**2
-		
-		giniPond = totalClass0/(totalClass0+totalClass1)*gNode1 + totalClass1/(totalClass0+totalClass1)*gNode2
-
-		return (gNode1, gNode2, giniPond)
-
-
-	def findBestSection(self, attribMat):
-		
-		bestGini = 0.5
-		best_section = 1
-		
-		lenAttribute = int(max(attribMat[:,1]))
-		
-		for sectionNumber in range(1, lenAttribute):
-			
-			classPerSection = self.countClassPerSection(attribMat, sectionNumber)
-			
-			if (classPerSection[0] + classPerSection[1] != 0 and classPerSection[2] + classPerSection[3] != 0):
-
-				currGini = self.computeGini(classPerSection)
-				
-				if 	currGini[2] < bestGini:
-					bestGini = currGini[2]
-					best_section = sectionNumber
-		
-		return (bestGini, best_section)
-
-
-	def findBestAttribute(self):
-		bestGini = 0.5
-		bestAttrib, bestSection = None, None
-
-		for attribNumber in range(1, len(self.data[0])):
-			if self.doneAttribute[attribNumber-1] == False:
-				attribmat = self.oneAttribToClassMat(attribNumber)
-				
-				attriBestSection = self.findBestSection(attribmat)
-
-				#print("currATtrib", attribNumber)
-				if attriBestSection[0]  < bestGini:
-					bestGini = attriBestSection[0]
-					bestAttrib = attribNumber
-					bestSection = attriBestSection[1]
-		
-		if bestAttrib == None:
-			#bestAttrib = self.attribute
-			self.leaf = True
-
-		return (bestGini, bestAttrib, bestSection)
-
-
-	def splitData(self):
-		
-		dataL, dataR = [], []
-
-		for row in self.data:
-			if row[self.attribute] <= self.section:
-				dataL.append(row)		
-			else:
-				dataR.append(row)
-
-		return (np.array(dataL), np.array(dataR))
-
-
-
-	def compute(self):
-		
-		print("Pgini", self.parentGini())
-		self.gini, self.attribute, self.section = self.findBestAttribute()
-		
-		if self.leaf == True or self.maxDepth == 0:
-			return
-
-		else:
-			
-
-			self.doneAttribute[self.attribute-1] = True
-			print("attr", self.attribute, "gini", self.gini, self.doneAttribute)
-
-
-			#print("Attribute", self.attribute, "Section", self.section, "Gini", self.gini, "depth", self.maxDepth)
-				
-			dataL, dataR = self.splitData()
-				
-			#print("GINI", self.computeGini((5, 1, 2, 4)))
-			if len(set(self.doneAttribute)) == 2:
-				if self.left is None and len(set(dataL[:,0])) == 2:
-					self.left = Node(dataL, self.maxDepth-1, self.doneAttribute)
-						
-				if self.right is None and len(set(dataR[:,0])) == 2:
-					self.right = Node(dataR, self.maxDepth-1, self.doneAttribute)
-
+def computeGini(c1, c2):
 	
-def dataFileToMat(filename):
-	return np.loadtxt(filename, usecols=(0,1,2,3,4,5,6))
+	return 1 - (c1 / (c1+c2)) ** 2 - (c2 / (c1+c2)) ** 2
 
-max_depth = 100
 
-dataTrain_1 = dataFileToMat("data-20191014/monks-1.train")
+def giniPond(n1c1, n1c2, n2c1, n2c2):
 
-three = Node(dataTrain_1, max_depth, [False] * 6)
+	cTotal = n1c1 + n1c2 + n2c1 + n2c2			
+	
+	giniN1 = computeGini(n1c1, n1c2)
+	giniN2 = computeGini(n2c1, n2c2)
 
-COUNT = [25]
+	return (n1c1+n1c2)/cTotal * giniN1 + (n2c1+n2c2)/cTotal * giniN2
 
-def print2DUtil(three, space, max_depth) : 
-  
-    # Base case  
-    if (three == None) : 
+
+def splitData(attribute, section, data):
+	
+	dataL, dataR = [], []
+
+	for row in data:
+		if row[attribute] <= section:
+			dataL.append(row)		
+		else:
+			dataR.append(row)
+
+	return (np.array(dataL), np.array(dataR))
+
+
+def findBestChildGini(node):
+	bestGini = node.gini
+	node.attribute = "Leaf"
+	best_section = None				
+	n1c1, n1c2, n2c1, n2c2 =  None, None, None, None
+	dataNodeL, dataNodeR = [], []
+	
+	giniL, giniR = None, None
+
+	for currAttribute in range(1, len(node.dataTrain[0])):
+		if node.done_attribute[currAttribute-1] == False:	
+
+			for currSection in range(int(max(node.dataTrain[:,currAttribute]))):
+
+				n1, n2 = splitData(currAttribute, currSection, node.dataTrain)
+				
+				n1c1, n1c2 = countC1C2(n1)
+				n2c1, n2c2 = countC1C2(n2)			
+
+				if (n1c1 + n1c2) != 0 and (n2c1 + n2c2) != 0:
+					
+					currPondGini = giniPond(n1c1, n1c2, n2c1, n2c2)
+
+					if currPondGini < bestGini:
+						bestGini = currPondGini
+						node.attribute = currAttribute
+						node.section = currSection
+						dataNodeL, dataNodeR = n1, n2
+						giniL = computeGini(n1c1, n1c2)
+						giniR = computeGini(n2c1, n2c2)
+
+	if node.attribute != "Leaf":
+		node.done_attribute[node.attribute-1] = True
+
+	return (dataNodeL, dataNodeR, giniL, giniR, node.done_attribute)
+
+
+def makeNode(node, max_depth, min_class):
+	
+	node.c1, node.c2 = countC1C2(node.dataTrain)
+	node.gini = computeGini(node.c1, node.c2)
+	dataNodeL, dataNodeR, giniL, giniR, done_attribute = findBestChildGini(node)
+
+	if max_depth <= node.count:
+		return
+	
+	if len(dataNodeL) > min_class:
+		node.left = Node(dataNodeL, done_attribute.copy(), node.count+1)
+		makeNode(node.left, max_depth, min_class)
+		
+
+	if len(dataNodeR) > min_class:
+		node.right = Node(dataNodeR, done_attribute.copy(), node.count+1)
+		makeNode(node.right, max_depth, min_class)
+
+
+def treeTest(node, dataTest):
+
+	node.dataTest = dataTest
+	node.testC1, node.testC2 = countC1C2(node.dataTest)
+	node.testGini = computeGini(node.testC1, node.testC2)
+
+	if node.attribute == "Leaf":
+		return
+
+	dataL, dataR = splitData(node.attribute, node.section, node.dataTest)
+
+	treeTest(node.left, dataL)
+	treeTest(node.right, dataR)
+
+
+def printTree(tree, space) : 
+   
+    if (tree == None) : 
         return
-  
-    # Increase distance between levels  
+
     space += COUNT[0] 
   
-    print2DUtil(three.left, space, max_depth)  
-  
-    # Print current node after space  
-    # count  
+    printTree(tree.left, space)  
+
     print()  
     for i in range(COUNT[0], space): 
-        print(end = " ")  
-    print("Level:", max_depth - three.maxDepth, "Attribute N°", three.attribute, "Gini", three.gini, three.doneAttribute)  
-   
-    print2DUtil(three.right, space, max_depth)  
+        print(end = " ") 
 
-print2DUtil(three, 0, max_depth)
+    print("Level:", tree.count, "Attrib:", tree.attribute)
+
+    for i in range(COUNT[0], space): 
+        print(end = " ")
+    print("Train C1C2:", tree.c1, tree.c2, "Train gini:", round(tree.gini, 2))
+    
+
+    for i in range(COUNT[0], space): 
+        print(end = " ")
+    print("Test C1C2:", tree.testC1, tree.testC2, "Test gini:", round(tree.testGini, 2))
+
+    printTree(tree.right, space)  
+
+
+COUNT = [28]
+max_depth = 10
+min_class = 0
+done_attribute = [False] * 6
+
+dataTrain_1 = dataFileToMat("data-20191014/monks-1.train")
+dataTest_1 = dataFileToMat("data-20191014/monks-1.test")
+
+root = Node(dataTrain_1, done_attribute, 0)
+makeNode(root, max_depth, min_class)
+treeTest(root, dataTest_1)
+printTree(root, 0)
+
+dataTrain_2 = dataFileToMat("data-20191014/monks-2.train")
+dataTest_2 = dataFileToMat("data-20191014/monks-2.test")
+
+root2 = Node(dataTrain_2, done_attribute, 0)
+makeNode(root2, max_depth, min_class)
+treeTest(root2, dataTest_2)
+printTree(root2, 0)
 
