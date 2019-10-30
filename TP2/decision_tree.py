@@ -62,13 +62,10 @@ def splitData(attribute, section, data):
 
 
 def findBestChildGini(node):
+
 	bestGini = node.gini
 	node.attribute = "Leaf"
-	best_section = None				
-	n1c1, n1c2, n2c1, n2c2 =  None, None, None, None
 	dataNodeL, dataNodeR = [], []
-	
-	giniL, giniR = None, None
 
 	for currAttribute in range(1, len(node.dataTrain[0])):
 		if node.done_attribute[currAttribute-1] == False:	
@@ -89,20 +86,19 @@ def findBestChildGini(node):
 						node.attribute = currAttribute
 						node.section = currSection
 						dataNodeL, dataNodeR = n1, n2
-						giniL = computeGini(n1c1, n1c2)
-						giniR = computeGini(n2c1, n2c2)
+
 
 	if node.attribute != "Leaf":
 		node.done_attribute[node.attribute-1] = True
 
-	return (dataNodeL, dataNodeR, giniL, giniR, node.done_attribute)
+	return (dataNodeL, dataNodeR, node.done_attribute)
 
 
 def makeNode(node, max_depth, min_class):
 	
 	node.c1, node.c2 = countC1C2(node.dataTrain)
 	node.gini = computeGini(node.c1, node.c2)
-	dataNodeL, dataNodeR, giniL, giniR, done_attribute = findBestChildGini(node)
+	dataNodeL, dataNodeR, done_attribute = findBestChildGini(node)
 
 	if max_depth <= node.count:
 		return
@@ -159,24 +155,20 @@ def printTree(tree, space) :
     printTree(tree.right, space)  
 
 
+def computeAndDrawTree(dataTrainName, dataTestName, max_depth, min_class):
+	
+	dataTrain = dataFileToMat(dataTrainName)
+	dataTest = dataFileToMat(dataTestName)
+
+	root = Node(dataTrain, [False] * 6, 0)	
+	makeNode(root, max_depth, min_class)
+	treeTest(root, dataTest)
+	printTree(root, 0)
+
+
 COUNT = [28]
-max_depth = 10
-min_class = 0
-done_attribute = [False] * 6
 
-dataTrain_1 = dataFileToMat("data-20191014/monks-1.train")
-dataTest_1 = dataFileToMat("data-20191014/monks-1.test")
+max_depth, min_class = 10, 0
 
-root = Node(dataTrain_1, done_attribute, 0)
-makeNode(root, max_depth, min_class)
-treeTest(root, dataTest_1)
-printTree(root, 0)
-
-dataTrain_2 = dataFileToMat("data-20191014/monks-2.train")
-dataTest_2 = dataFileToMat("data-20191014/monks-2.test")
-
-root2 = Node(dataTrain_2, done_attribute, 0)
-makeNode(root2, max_depth, min_class)
-treeTest(root2, dataTest_2)
-printTree(root2, 0)
-
+computeAndDrawTree("data-20191014/monks-1.train", "data-20191014/monks-1.test", max_depth, min_class)
+computeAndDrawTree("data-20191014/monks-2.train", "data-20191014/monks-2.test", max_depth, min_class)
