@@ -101,16 +101,18 @@ def makeNode(node, max_depth, min_class):
 	dataNodeL, dataNodeR, done_attribute = findBestChildGini(node)
 
 	if max_depth <= node.count:
+		node.attribute = "Leaf"
 		return
 	
 	if len(dataNodeL) > min_class:
 		node.left = Node(dataNodeL, done_attribute.copy(), node.count+1)
 		makeNode(node.left, max_depth, min_class)
-		
+
 
 	if len(dataNodeR) > min_class:
 		node.right = Node(dataNodeR, done_attribute.copy(), node.count+1)
 		makeNode(node.right, max_depth, min_class)
+
 
 def percentageTest(node):
 	if node.testC1 + node.testC2 != 0:
@@ -119,6 +121,16 @@ def percentageTest(node):
 		else:
 			return node.testC2/(node.testC1+node.testC2)*100
 		
+def meanPercentage(node):
+	
+	if node != None:
+		if node.attribute == "Leaf":
+			COUNTLEAF[0] += 1
+			PERCENT[0] += percentageTest(node)
+		meanPercentage(node.left)
+		meanPercentage(node.right)
+	else:
+		return
 
 def treeTest(node, dataTest):
 
@@ -176,11 +188,18 @@ def computeAndDrawTree(dataTrainName, dataTestName, max_depth, min_class):
 	makeNode(root, max_depth, min_class)
 	treeTest(root, dataTest)
 	printTree(root, 0)
+	
+	return root
 
 
 COUNT = [25]
+COUNTLEAF = [0]
+PERCENT = [0]
+max_depth, min_class = 2, 0
 
-max_depth, min_class = 10, 0
+r1 = computeAndDrawTree("data-20191014/monks-1.train", "data-20191014/monks-1.test", max_depth, min_class)
+r2 = computeAndDrawTree("data-20191014/monks-2.train", "data-20191014/monks-2.test", max_depth, min_class)
 
-computeAndDrawTree("data-20191014/monks-1.train", "data-20191014/monks-1.test", max_depth, min_class)
-computeAndDrawTree("data-20191014/monks-2.train", "data-20191014/monks-2.test", max_depth, min_class)
+meanPercentage(r1)
+print("Percentage success:", round(PERCENT[0]/COUNTLEAF[0]), "%")
+
