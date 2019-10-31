@@ -17,7 +17,7 @@ class Node:
 		self.attribute = None
 		self.section = None
 		self.done_attribute = done_attribute
-	
+		self.C = None
 
 def dataFileToMat(filename):
 	return np.loadtxt(filename, usecols=(0,1,2,3,4,5,6))
@@ -112,25 +112,37 @@ def makeNode(node, max_depth, min_class):
 		node.right = Node(dataNodeR, done_attribute.copy(), node.count+1)
 		makeNode(node.right, max_depth, min_class)
 
+def percentageTest(node):
+	if node.testC1 + node.testC2 != 0:
+		if node.C == "C1":
+			return node.testC1/(node.testC1+node.testC2)*100
+		else:
+			return node.testC2/(node.testC1+node.testC2)*100
+		
 
 def treeTest(node, dataTest):
 
 	node.dataTest = dataTest
 	node.testC1, node.testC2 = countC1C2(node.dataTest)
-	node.testGini = computeGini(node.testC1, node.testC2)
+	#node.testGini = computeGini(node.testC1, node.testC2)
 
-	if node.attribute == "Leaf":
+	if node.c1 > node.c2:
+		node.C = "C1"
+	else:
+		node.C = "C2"
+
+	if node.attribute != "Leaf":
+		dataL, dataR = splitData(node.attribute, node.section, node.dataTest)
+	else:
 		return
-
-	dataL, dataR = splitData(node.attribute, node.section, node.dataTest)
 
 	treeTest(node.left, dataL)
 	treeTest(node.right, dataR)
 
 
-def printTree(tree, space) : 
+def printTree(tree, space): 
    
-    if (tree == None) : 
+    if tree == None: 
         return
 
     space += COUNT[0] 
@@ -141,7 +153,7 @@ def printTree(tree, space) :
     for i in range(COUNT[0], space): 
         print(end = " ") 
 
-    print("Level:", tree.count, "Attrib:", tree.attribute)
+    print("Level:", tree.count, "Attrib:", tree.attribute, "Class", tree.C)
 
     for i in range(COUNT[0], space): 
         print(end = " ")
@@ -150,7 +162,7 @@ def printTree(tree, space) :
 
     for i in range(COUNT[0], space): 
         print(end = " ")
-    print("Test C1C2:", tree.testC1, tree.testC2, "Test gini:", round(tree.testGini, 2))
+    print("Test C1C2:", tree.testC1, tree.testC2, "percentage:", round(percentageTest(tree)), "%")#"Test gini:", round(tree.testGini, 2))
 
     printTree(tree.right, space)  
 
@@ -166,7 +178,7 @@ def computeAndDrawTree(dataTrainName, dataTestName, max_depth, min_class):
 	printTree(root, 0)
 
 
-COUNT = [28]
+COUNT = [25]
 
 max_depth, min_class = 10, 0
 
