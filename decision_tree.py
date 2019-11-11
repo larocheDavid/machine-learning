@@ -195,10 +195,10 @@ def computeAndDrawTree(dataTrainName, dataTestName, max_depth, min_class):
 COUNT = [25]
 COUNTLEAF = [0]
 PERCENT = [0]
-max_depth, min_class = 2, 0
+max_depth, min_class = 3, 2
 
 r1 = computeAndDrawTree("data-20191014/monks-1.train", "data-20191014/monks-1.test", max_depth, min_class)
-r2 = computeAndDrawTree("data-20191014/monks-2.train", "data-20191014/monks-2.test", max_depth, min_class)
+#r2 = computeAndDrawTree("data-20191014/monks-2.train", "data-20191014/monks-2.test", max_depth, min_class)
 
 meanPercentage(r1)
 print("Percentage success:", round(PERCENT[0]/COUNTLEAF[0]), "%")

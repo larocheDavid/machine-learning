@@ -15,7 +15,7 @@ class Cluster:
 
 	def drawMarker(self, point, marker):
 		plt.scatter(point[0], point[1], c=self.color, marker=marker)
-		plt.pause(0.1)
+		plt.pause(0.5)
 		
 
 	def clearMarker(self, point, marker):
