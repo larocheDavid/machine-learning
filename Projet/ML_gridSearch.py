@@ -24,10 +24,10 @@ def computeScore(data, estimator, tuned_parameters):
     clf = GridSearchCV(estimator, tuned_parameters, cv=CROSSVALIDATION, scoring='accuracy', n_jobs=-1)
     clf.fit(X, y)
     stop = timeit.default_timer()
-    print(len(clf.cv_results_), "models computed in", stop-start, "seconds")
    
     means = clf.cv_results_['mean_test_score']
     stds = clf.cv_results_['std_test_score']
+    print(len(means), "models computed in", stop-start, "seconds")
     print(*clf.cv_results_['params'][0])
     for mean, std, params in zip(means, stds, clf.cv_results_['params']):
         outPut.append([round(mean, FLOATPRECISION), round(std * 2, FLOATPRECISION), *params.values()])
