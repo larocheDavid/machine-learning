@@ -213,9 +213,9 @@ aux modèles suivants :
 
 \hspace{\parindent} 1. L’exécution du script prend en paramètres optionnels les données à traiter wisc pour \path{wisconsin.dat} et dj pour \path{dow_jones_index.data}, pour les données à choix.\\
 2. Il prend aussi les méthode de classification PPV pour le plus proche voisin, AD pour les arbres de décision, PMC pour le perceptron multi-couches et finalement SVM pour la machine à vecteurs de support.\\
-3. Le script va donc calculer pour chaque ensemble de données et de classificateurs indiqués avec ses paramètres (définis en durs dans le programme pour des raisons de praticité) puis produire le fichier .csv correspondant.\\
+3. Le script va donc calculer pour chaque ensemble de données et de classificateurs indiqués avec ses paramètres (définis en durs dans le programme pour des raisons de praticité) puis produire le fichier .csv avec tous les modèles ainsi calculés.\\
 \vspace{1mm}
-Ceci permet de comparer les résultats des différents modèles mais aussi quels paramètres influencent le mieux leur taux de classification (TCC).\\
+Ceci permet de comparer les résultats des différents classificateurs mais aussi quels paramètres influencent le mieux le taux de classification (TCC) au sein de la même méthode.\\
 \vspace{1mm}
 Exemple de commande :
 \begin{lstlisting}[language=bash]
@@ -327,15 +327,15 @@ Paramètres modifiés:\\
 1. Nombre de vosins pour la requête [\verb!n_neighbours!]: nombre impair de 1 à 50\\
 2. Poids pour la requête: [uniform, distance]\\
 \vspace{1mm}
-Ce classificateur ne possédant que deux paramètres nous intéressant dont un binaire nous pouvons représenter les résultats sur un graphe.
-
+Ce classificateur ne possédant que deux paramètres nous intéressant dont un binaire, nous pouvons donc représenter les résultats avec deux courbes sur un graphe.
+\subsubsection*{Données du wisconsin}
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.65]{images/wisc_ppv.png}
 \caption{Plot on wisconsin.data}
 \end{figure}
-Nous avons un maximum à 5 et 7 voisins, ensuite l’augmentation de ce nombre n’améliore pas la performance. Les dents de scies sur le même nombre de voisins est causé par le mode de détermination de la classe (par distance ou par majorité). Avec ces données, le changement des paramètres influence peu la performance (différence de 1,8 point entre le maximum et le minimum).
-
+Nous avons un maximum à 5 et 7 voisins, ensuite l’augmentation de ce nombre n’améliore pas la performance. Avec ces données, le changement des paramètres influence peu la performance (différence de 1,8 point entre le maximum et le minimum).
+\subsubsection*{Données du Dow Jones}
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.65]{images/dj_ppv.png}
@@ -352,7 +352,7 @@ Paramètres modifiés:\\
 
 \vspace{2mm}
 Le découpage d’une node se fait avec le meilleur gini par défaut.
-
+\subsubsection*{Données du wisconsin}
 
 \begin{table}[h]
   {\centering
@@ -374,6 +374,8 @@ Le découpage d’une node se fait avec le meilleur gini par défaut.
 Nous pouvons observer (ref. Table \ref{table:scores_wisc}) que [\verb!max_depth!] n’influence pas le TCC test moyen (\verb!mean_test_score!) pour une certaine combinaison des paramètres [\verb!min_samples_leaf!] et [\verb!min_samples_split!].\\
 \vspace{2mm}
 Il est tout a fait possible que certains paramètres comme [\verb!min_samples_leaf!] arrêtent la croissance de l’arbre avant d’arriver à la profondeur maximale, ainsi [\verb!max_depth!] ne produit aucune amélioration du TCC à partir d’un certain seuil. Nous pouvons avoir le même phénomène avec le nombre d’exemple minimal pour découper une node. Ces paramètres s’influence donc entre eux mais sont utiles pour se prémunir de l’overfitting, le pire des cas étant d’avoir une feuille pour chaque exemple.
+
+\subsubsection*{Données du Dow Jones}
 
 \begin{table}[h]
   {\centering
@@ -403,30 +405,28 @@ Paramètres modifiés:\\
     3. couches cachées et nombre de neurones y figurant (\verb!hidden_layer_sizes!) : (5, 50), (5, 100), (10, 50), (10,100)\\
     4. Taux d’apprentissage (\verb!learning_rate!) : constant, invscaling, adaptif\\
     5.  solveur : lbfgs, sgd, adam\\
-
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.65]{images/wisc_pmc_1.png}
-\caption{Meilleurs scores sur wisconsin.dat}
+\vspace{2mm}
+\subsubsection*{Données du wisconsin}
+\begin{figure}[h]
+	\includegraphics[scale=0.65]{images/wisc_pmc_1.png}
+	\caption{Meilleurs scores sur wisconsin.dat}
 \end{figure}
 
 Pour le PMC nous obtenons les meilleurs résultats avec un alpha de 1 ou 10 et la fonction d’activation tangente hyperbolique le plus souvent et lbfgs comme solveur.
 Dans notre cas, nombre de de couches cachées et le nombres de neurones y figurant influencent peu les résultats.
-Je suppose que le alpha de 0.1 systématiquement plus mauvais dans notre cas est causé par la tendance à rester dans des minimas locaux moins bons lors de la descente de gradient.
-\newpage
+Je suppose que le alpha de 0.1 systématiquement plus mauvais dans notre cas est causé par la tendance à rester dans des minimas locaux moins bons lors de la descente de gradient.\\
+\vspace{2mm}
 Le TCC minimum obtenu est de 0.439 ce qui est mauvais. Nous pouvons déduire que la configuration des paramètres est d’autant plus important pour ce classificateur. Cependant, à part les trois paramètres cités avant, il est difficile de déterminer quelle est l’influence des autres paramètres car c’est sans doute leur combinaison qui explique cette variation de résultats.
-
-Variation que nous pouvons observer si nous classons les modèles par ordre de TCC décroissant.
 
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.65]{images/wisc_pmc_2.png}
 \caption{Décroissance du TCC sur wisconsin.data}
+\label{fig:TCCwisc}
 \end{figure}
-
-Nous pouvons remarquer un saut de 0,9 à 0,65 environ de TCC, en étudiant les données, la combinaison des autres paramètres avec la fonction logistique donne systématiquement des résultats moins bon, ainsi qu’une combinaison entre certains paramètres et le solveur invscaling.
-
+Variation que nous pouvons observer Fig \ref{fig:TCCwisc} si nous classons les modèles par ordre de TCC décroissant. Nous pouvons remarquer un saut de 0,9 à 0,65 environ du TCC, ce saut serait expliqué la fonction logistique et une combinaison des autres paramètres et sinon le solveur invscaling et une combinaison avec les autres paramètres.
+\vspace{2mm}
+\subsubsection*{Données du Dow Jones}
 
 \begin{figure}[H]
 \centering
@@ -435,14 +435,13 @@ Nous pouvons remarquer un saut de 0,9 à 0,65 environ de TCC, en étudiant les d
 \end{figure}
 
 Il intéressant de relever la similarité des scores et des meilleurs paramètres malgré deux ensembles de données très différents.
-On observe le même phénomène si l’on classe les modèles par TCC.
 
 \begin{figure}[H]
 \centering
 \includegraphics[scale=0.65]{images/dj_pmc_2.png}
 \caption{Décroissance du TCC sur\protect\path{dow_jones_index.data}}
 \end{figure}
-
+On observe le même phénomène si l’on classe les modèles par TCC.
 % Results and Discussion can be combined.
 \section*{Conclusion}
 
