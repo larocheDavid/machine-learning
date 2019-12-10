@@ -1,0 +1,10 @@
+TCC moyen test,STD,TCC Train Moyen,Fit Time Moyen,Hidden Layer Sizes,Learning Rate
+0.963,0.041,0.974,0.5176,50,constant
+0.968,0.035,0.976,0.6327,50,invscaling
+0.959,0.03,0.977,0.5886,50,adaptive
+0.962,0.052,0.982,0.7612,100,constant
+0.968,0.035,0.985,0.7027,100,invscaling
+0.96,0.037,0.979,0.607,100,adaptive
+0.965,0.031,0.984,0.8744,200,constant
+0.962,0.033,0.985,0.9135,200,invscaling
+0.962,0.052,0.986,0.7485,200,adaptive
