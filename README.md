@@ -246,4 +246,4 @@ On observe le même phénomène si l’on classe les modèles par TCC.
 
 4. Conclusion :
 
-	Scikitlearn fournit beaucoup d’outils pour améliorer ses modèles de classification ou de régression. Cependant il n’est pas toujours évident de comprendre l’influence des paramètres utilisés, une idée serait d’utiliser une régression sur ces données (donc du machine learning sur du machine learning) afin de déterminer les paramètres les plus influents en observant leurs poids. Il serait aussi judicieux d’explorer le domaine de la statistique qui possède des liens forts avec le machine learning.
+	Scikitlearn fournit beaucoup d’outils pour améliorer ses modèles de classification ou de régression. Cependant il n’est pas toujours évident de comprendre l’influence des paramètres utilisés, une idée serait d’utiliser une régression sur ces données (donc du machine learning sur du machine learning) afin de déterminer les paramètres les plus influents en observant leurs poids. 
